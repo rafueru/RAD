@@ -2,19 +2,19 @@ version: '3'
 
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: 
+      context: .
+      dockerfile: ./backend/Dockerfile
     ports:
       - "5000:5000"
-  
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    environment:
-      - DISPLAY=${DISPLAY}
-      - QT_X11_NO_MITSHM=1
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ./backend:/app
 
+  frontend:
+    build: 
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
