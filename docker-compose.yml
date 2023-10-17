@@ -10,6 +10,16 @@ services:
     volumes:
       - ./backend:/app
 
+  services:
+  backend:
+    build: 
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+
   frontend:
     build: 
       context: .
