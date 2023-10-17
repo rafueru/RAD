@@ -8,3 +8,4 @@ RUN apt-get update && apt-get install -y tk && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY . .
 RUN chmod +x frontend.py
+CMD ["python", "frontend.py"]
