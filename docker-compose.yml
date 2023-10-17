@@ -16,5 +16,8 @@ services:
       dockerfile: ./frontend/Dockerfile
     depends_on:
       - backend
+    environment:
+      - DISPLAY=${DISPLAY}
     volumes:
       - ./frontend:/app
+      - /tmp/.X11-unix:/tmp/.X11-unix  # This is needed for the frontend to connect to the host's X server.
