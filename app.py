@@ -22,6 +22,11 @@ def close_connection(exception):
 @app.route('/submit', methods=['POST'])
 def submit_data():
     data = request.json
+    # Certifique-se de que todas as chaves necessárias estão presentes
+    required_keys = ['name', 'age', 'city', 'state', 'phone', 'email']
+    if not all(key in data for key in required_keys):
+        return jsonify({"error": "Missing required data"}), 400
+
     conn = get_db()
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS developers
@@ -30,7 +35,8 @@ def submit_data():
 
     c.execute('''INSERT INTO developers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
               (data['name'], data['age'], data['city'], data['state'], data['phone'], data['email'],
-               data['experience'], data['skills'], data['linkedin'], data['employment_status'], data['salary_expectation']))
+               data.get('experience', ''), data.get('skills', ''), data.get('linkedin', ''),
+               data.get('employment_status', ''), data.get('salary_expectation', None)))
     conn.commit()
     return jsonify({"message": "Data received", "data": data}), 200
 
