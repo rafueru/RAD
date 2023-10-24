@@ -1,47 +1,39 @@
-from flask import Flask, request, jsonify, g
-import sqlite3
-from flasgger import Swagger
+import tkinter as tk
+from tkinter import messagebox
+import requests
 
-DATABASE = 'database.db'
+class DeveloperApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Developer Submission")
 
-app = Flask(__name__)
-swagger = Swagger(app)
+        self.name_label = tk.Label(self, text="Name")
+        self.name_label.pack()
+        self.name_entry = tk.Entry(self)
+        self.name_entry.pack()
 
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-    return db
+        self.age_label = tk.Label(self, text="Age")  # Adicionando label para idade
+        self.age_label.pack()
+        self.age_entry = tk.Entry(self)  # Adicionando entrada para idade
+        self.age_entry.pack()
 
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
+        # Repita para outros campos...
 
-@app.route('/submit', methods=['POST'])
-def submit_data():
-    data = request.json
-    print(data)  # Log the received data
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS developers
-                 (name TEXT, age INTEGER, city TEXT, state TEXT, phone TEXT, email TEXT,
-                  experience TEXT, skills TEXT, linkedin TEXT, employment_status TEXT, salary_expectation REAL);''')
+        self.submit_button = tk.Button(self, text="Submit", command=self.submit_data_to_backend)
+        self.submit_button.pack()
 
-    c.execute('''INSERT INTO developers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-              (data['name'], data['age'], data['city'], data['state'], data['phone'], data['email'],
-               data['experience'], data['skills'], data['linkedin'], data['employment_status'], data['salary_expectation']))
-    conn.commit()
-    return jsonify({"message": "Data received", "data": data}), 200
-
-@app.route('/get_developers', methods=['GET'])
-def get_developers():
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('''SELECT * FROM developers''')
-    developers = c.fetchall()
-    return jsonify({"developers": developers}), 200
+    def submit_data_to_backend(self):
+        data = {
+            "name": self.name_entry.get(),
+            "age": self.age_entry.get(),  # Incluindo idade no dicionário data
+            # Adicione outros campos conforme necessário
+        }
+        response = requests.post('http://localhost:5000/submit', json=data)
+        if response.status_code == 200:
+            messagebox.showinfo("Info", "Data submitted!")
+        else:
+            messagebox.showerror("Error", "Failed to submit data!")
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    developer_app = DeveloperApp()
+    developer_app.mainloop()
