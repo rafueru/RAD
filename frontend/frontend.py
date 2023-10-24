@@ -1,51 +1,47 @@
-import tkinter as tk
-from tkinter import messagebox
-import requests
+from flask import Flask, request, jsonify, g
+import sqlite3
+from flasgger import Swagger
 
-class DeveloperApp(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Developer Submission")
-        self.name_label = tk.Label(self, text="Name")
-        self.name_label.pack()
-        self.name_entry = tk.Entry(self)
-        self.name_entry.pack()
+DATABASE = 'database.db'
 
-        # Repita para outros campos...
+app = Flask(__name__)
+swagger = Swagger(app)
 
-        self.submit_button = tk.Button(self, text="Submit", command=self.submit_data_to_backend)
-        self.submit_button.pack()
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
 
-    def submit_data_to_backend(self):
-        data = {
-            "name": self.name_entry.get(),
-            # Adicione outros campos conforme necessário
-        }
-        response = requests.post('http://localhost:5000/submit', json=data)
-        if response.status_code == 200:
-            messagebox.showinfo("Info", "Data submitted!")
-        else:
-            messagebox.showerror("Error", "Failed to submit data!")
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
 
-class ManagerApp(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Manager Interface")
-        self.get_developers_button = tk.Button(self, text="Get Developers", command=self.get_developers_from_backend)
-        self.get_developers_button.pack()
+@app.route('/submit', methods=['POST'])
+def submit_data():
+    data = request.json
+    print(data)  # Log the received data
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS developers
+                 (name TEXT, age INTEGER, city TEXT, state TEXT, phone TEXT, email TEXT,
+                  experience TEXT, skills TEXT, linkedin TEXT, employment_status TEXT, salary_expectation REAL);''')
 
-    def get_developers_from_backend(self):
-        response = requests.get('http://localhost:5000/get_developers')
-        if response.status_code == 200:
-            developers = response.json()['developers']
-            for developer in developers:
-                tk.Label(self, text=f"Name: {developer[0]}, City: {developer[2]}").pack()  # Ajuste conforme necessário
+    c.execute('''INSERT INTO developers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+              (data['name'], data['age'], data['city'], data['state'], data['phone'], data['email'],
+               data['experience'], data['skills'], data['linkedin'], data['employment_status'], data['salary_expectation']))
+    conn.commit()
+    return jsonify({"message": "Data received", "data": data}), 200
+
+@app.route('/get_developers', methods=['GET'])
+def get_developers():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('''SELECT * FROM developers''')
+    developers = c.fetchall()
+    return jsonify({"developers": developers}), 200
 
 if __name__ == '__main__':
-    app_choice = input("Digite '1' para lançar a interface do desenvolvedor ou '2' para lançar a interface do gerente: ")
-    if app_choice == '1':
-        developer_app = DeveloperApp()
-        developer_app.mainloop()
-    elif app_choice == '2':
-        manager_app = ManagerApp()
-        manager_app.mainloop()
+    app.run(debug=True, host='0.0.0.0')
