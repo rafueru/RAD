@@ -12,10 +12,15 @@ class DeveloperApp(tk.Tk):
         self.name_entry = tk.Entry(self)
         self.name_entry.pack()
 
-        self.age_label = tk.Label(self, text="Age")  # Adicionando label para idade
+        self.age_label = tk.Label(self, text="Age")
         self.age_label.pack()
-        self.age_entry = tk.Entry(self)  # Adicionando entrada para idade
+        self.age_entry = tk.Entry(self)
         self.age_entry.pack()
+
+        self.city_label = tk.Label(self, text="City")  # Adicionando label para cidade
+        self.city_label.pack()
+        self.city_entry = tk.Entry(self)  # Adicionando entrada para cidade
+        self.city_entry.pack()
 
         # Repita para outros campos...
 
@@ -25,7 +30,8 @@ class DeveloperApp(tk.Tk):
     def submit_data_to_backend(self):
         data = {
             "name": self.name_entry.get(),
-            "age": self.age_entry.get(),  # Incluindo idade no dicionário data
+            "age": self.age_entry.get(),
+            "city": self.city_entry.get(),  # Incluindo cidade no dicionário data
             # Adicione outros campos conforme necessário
         }
         response = requests.post('http://localhost:5000/submit', json=data)
