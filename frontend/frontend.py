@@ -7,7 +7,7 @@ def submit_data_to_backend():
         "name": name_entry.get(),
         # Adicione outros campos conforme necessário
     }
-    response = requests.post('http://backend:5000/submit', json=data)
+    response = requests.post('http://localhost:5000/submit', json=data)
     if response.status_code == 200:
         messagebox.showinfo("Info", "Data submitted!")
     else:
